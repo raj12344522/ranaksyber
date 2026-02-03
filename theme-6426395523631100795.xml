@@ -1,0 +1,1312 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html b:css='false' b:defaultwidgetversion='2' b:layoutsversion='3' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+<head>
+    <meta charset='utf-8'/>
+    <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'/>
+    <title>Ronak Syber OS - Secure Admin</title>
+    <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css' rel='stylesheet'/>
+    
+    <script src='https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js'/>
+    <script src='https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js'/>
+    <script src='https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js'/> <script src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'/>
+
+    <b:skin><![CDATA[
+        :root { --primary: #06b6d4; --primary-bright: #67e8f9; --primary-dim: rgba(6, 182, 212, 0.3); --dark: #0f172a; --panel: #1e293b; --text-main: #f1f5f9; --text-muted: #94a3b8; --green: #10B981; --red: #EF4444; --saffron: #ff9933; --border-color: rgba(255,255,255,0.1); }
+        * { box-sizing: border-box; outline: none; -webkit-user-select: none; user-select: none; } 
+        input, textarea { -webkit-user-select: text; user-select: text; }
+        html, body { margin: 0; padding: 0; background: var(--dark); color: var(--text-main); font-family: 'Segoe UI', sans-serif; width: 100vw; height: 100vh; overflow: hidden !important; position: fixed; top: 0; left: 0; }
+        ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: var(--primary); }
+        .cyber-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at 50% 0%, #1e293b 0%, var(--dark) 80%); }
+        .grid-anim { position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background-image: linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px); background-size: 40px 40px; transform: perspective(500px) rotateX(60deg); opacity: 0.4; }
+        
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 100002; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast-box { background: rgba(15, 23, 42, 0.95); border-left: 4px solid var(--primary); color: #fff; padding: 15px 20px; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 600; backdrop-filter: blur(10px); animation: slideIn 0.3s ease-out forwards; pointer-events: auto; min-width: 280px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .toast-box.success { border-color: var(--green); } .toast-box.error { border-color: var(--red); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        #main-view { width: 100%; height: 100%; display: flex; flex-direction: column; transition: 0.3s; }
+        
+        #bio-view, #photo-view { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #e0e0e0; z-index: 20000; 
+            display: none; flex-direction: column; overflow: hidden;
+            font-family: 'Segoe UI', sans-serif; color: #333;
+        }
+        #bio-view.active, #photo-view.active { display: flex; }
+        
+        /* LOGIN STYLES (User Provided) */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); z-index: 99999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(15px); padding: 20px; font-family: 'Segoe UI', sans-serif; }
+        .login-box { width: 100%; max-width: 360px; background: rgba(30, 41, 59, 0.95); border: 2px solid #06b6d4; padding: 35px 25px; border-radius: 20px; text-align: center; box-shadow: 0 0 60px rgba(6, 182, 212, 0.25); display: flex; flex-direction: column; align-items: center; }
+        .login-profile-wrapper { width: 100px; height: 100px; margin: 0 auto 15px auto; position: relative; flex-shrink: 0; }
+        .login-pic { width: 100%; height: 100%; border-radius: 50%; border: 3px solid #06b6d4; object-fit: cover; box-shadow: 0 0 20px rgba(6, 182, 212, 0.3); }
+        .login-title-text { font-size: 20px; font-weight: 800; color: #fff; margin: 0; letter-spacing: 1px; text-transform: uppercase; }
+        .login-subtitle { font-size: 11px; color: #06b6d4; font-weight: 700; margin-top: 5px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 25px; }
+        .login-form-area { width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
+        .login-field { text-align: center; font-size: 14px; letter-spacing: 2px; font-weight: bold; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 14px; margin-bottom: 15px; border-radius: 10px; width: 100%; transition: 0.3s; }
+        .login-field:focus { border-color: #06b6d4; box-shadow: 0 0 15px rgba(6, 182, 212, 0.3); outline: none; }
+        .login-submit-btn { width: 100%; background: linear-gradient(135deg, #06b6d4, #0891b2); color: #000; padding: 14px; font-weight: 800; border-radius: 10px; border: none; cursor: pointer; transition: 0.3s; margin-top: 5px; letter-spacing: 1px; }
+        .login-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(6, 182, 212, 0.3); }
+        .login-msg { height: 20px; font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-top: 15px; color: #94a3b8; }
+
+        /* SWITCH TOGGLE STYLES */
+        .switch input:checked + .slider { background-color: var(--primary); }
+        .switch input:focus + .slider { box-shadow: 0 0 1px var(--primary); }
+        .slider.round:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        .switch input:checked + .slider:before { transform: translateX(20px); }
+
+        /* PHOTO STUDIO LAYOUT */
+        #photo-view { background: #0b1120; color: #e2e8f0; }
+        .photo-studio-container { display: flex; flex-direction: column; height: 100%; padding: 0; }
+        .ps-layout { display: flex; flex: 1; overflow: hidden; }
+        .ps-upload-zone { width: 320px; background: #111827; border-right: 1px solid #334155; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        .ps-box-title { color: #94a3b8; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .ps-input { width: 100%; background: #1f2937; border: 1px solid #374151; color: #fff; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 600; text-align: center; transition: 0.3s; }
+        .ps-input:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-dim); }
+        .upload-drop-area { border: 2px dashed #374151; border-radius: 12px; padding: 30px 10px; text-align: center; cursor: pointer; transition: 0.3s; background: rgba(255,255,255,0.02); }
+        .upload-drop-area:hover { border-color: var(--primary); background: rgba(6, 182, 212, 0.05); }
+        .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 150px; overflow-y: auto; }
+        .mini-preview { width: 100%; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #4b5563; }
+        .btn-action { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; color: #fff; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 13px; }
+        .btn-upload { background: linear-gradient(135deg, var(--green), #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+        .btn-upload:hover { transform: translateY(-2px); }
+        .ps-gallery-zone { flex: 1; padding: 25px; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; max-width: 600px; margin: 0 auto 20px auto; width: 100%; }
+        .btn-search { background: var(--primary); color: #000; width: auto; padding: 0 25px; }
+        .main-viewer { flex: 1; background: #020617; border-radius: 16px; border: 1px solid #334155; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); min-height: 200px; }
+        .main-viewer img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .empty-state { text-align: center; color: #64748b; font-size: 14px; font-weight: 600; }
+        .thumb-strip { height: 100px; margin-top: 20px; display: flex; gap: 12px; overflow-x: auto; padding: 5px; scroll-behavior: smooth; }
+        .thumb-item { height: 80px; width: 70px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; opacity: 0.6; transition: 0.2s; object-fit: cover; background: #000; }
+        .thumb-item:hover { opacity: 1; transform: translateY(-3px); }
+        .thumb-item.active { border-color: var(--primary); opacity: 1; box-shadow: 0 0 15px var(--primary-dim); }
+        .gallery-controls { display: flex; gap: 15px; margin-top: 15px; justify-content: center; }
+        .ctrl-btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: #fff; font-size: 12px; }
+        .btn-dl { background: #f59e0b; }
+        .btn-del { background: #ef4444; }
+
+        @media screen and (max-width: 768px) {
+            .ps-layout { flex-direction: column; overflow-y: auto; }
+            .ps-upload-zone { width: 100%; height: auto; flex-shrink: 0; border-right: none; border-bottom: 1px solid #334155; }
+            .ps-gallery-zone { height: auto; min-height: 500px; }
+        }
+        
+        .bio-toolbar { background: #2c3e50; color: #fff; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .bio-btn { background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 10px; }
+        .bio-btn.save { background: #27ae60; }
+        .bio-btn.back { background: #e74c3c; }
+        .bio-container { display: flex; flex: 1; overflow: hidden; }
+        .input-panel { width: 350px; background: #fff; padding: 15px; overflow-y: auto; border-right: 1px solid #ccc; }
+        .preview-panel { flex: 1; background: #525659; padding: 20px; overflow-y: auto; display: flex; justify-content: center; align-items: flex-start; }
+        .a4-page { width: 210mm; height: 296mm; background: white; padding: 30px 35px; box-shadow: 0 0 15px rgba(0,0,0,0.5); position: relative; color: #000; line-height: 1.25; font-family: 'Times New Roman', serif; display: flex; flex-direction: column; transform-origin: top center; }
+        .cv-content-wrapper { flex: 1; display: flex; flex-direction: column; }
+        .cv-footer-wrapper { margin-top: auto; padding-top: 10px; }
+        
+        /* FIXED PHOTO & HEADER LAYOUT */
+        .cv-header-wrapper { position: relative; min-height: 180px; width: 100%; }
+        .cv-photo-box { position: absolute; top: 0; right: 0; width: 35mm; height: 45mm; border: 2px solid #002d72; display: flex; justify-content: center; align-items: center; overflow: hidden; background: #f0f0f0; }
+        .cv-main-content { margin-right: 38mm; display: flex; flex-wrap: wrap; gap: 20px; padding-bottom: 10px; border-bottom: 1px solid #ddd; margin-bottom: 10px; align-items: flex-start; }
+        .cv-identity { flex: 1 1 200px; min-width: 200px; }
+        .cv-address-block { flex: 2 1 320px; min-width: 320px; display: flex; gap: 15px; font-size: 11pt; }
+
+        .split-container { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 5px; }
+        .split-left { flex: 1; }
+        .split-right { flex: 0 0 45%; margin-left: 15px; padding-left: 15px; border-left: 2px solid #002d72; }
+        h3 { margin-bottom: 5px; font-size: 1.1em; }
+        .bio-group { background: #f8f9fa; padding: 8px; border-left: 3px solid #3498db; margin: 10px 0 5px; font-weight: bold; font-size: 13px; }
+        .bio-inp { width: 100%; padding: 6px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        .bio-row { display: flex; gap: 5px; } .bio-col { flex: 1; }
+        .hidden { display: none !important; }
+        .lang-row { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; font-size: 13px; }
+        .lang-chk { width: auto !important; margin-right: 5px; }
+        .lang-sel { flex: 1; padding: 4px; border:1px solid #ccc; border-radius:4px; }
+        .dob-group { display: flex; gap: 5px; align-items: center; }
+        .dob-box { flex: 1; text-align: center; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; font-size: 13px; }
+        .dob-box:focus { border-color: var(--primary); outline: none; }
+        .fit-content-wrapper { width: 100%; display: flex; align-items: center; background: #fff; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; margin-bottom:5px; }
+        .auto-resize-text { border: none !important; width: 100%; padding: 8px; font-size: 13px; font-weight: bold; background:transparent; color: #000 !important; }
+        
+        /* NEW STATS MONITOR STYLE */
+        .storage-monitor { background: var(--panel); border: 1px solid var(--primary-dim); border-radius: 12px; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.3); transition: 0.3s; margin-bottom: 25px; }
+        .storage-monitor:hover { box-shadow: 0 0 25px var(--primary-dim); border-color: var(--primary); transform: translateY(-3px); }
+        .sm-title { font-size: 12px; color: var(--text-muted); font-weight: 800; letter-spacing: 1px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .sm-grid { display: flex; gap: 15px; }
+        .sm-box { flex: 1; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; position: relative; overflow: hidden; }
+        .sm-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, currentColor, transparent); opacity: 0.5; }
+        .bio-stat { color: var(--green); }
+        .photo-stat { color: var(--saffron); }
+        .sm-icon { font-size: 20px; margin-bottom: 5px; opacity: 0.8; }
+        .sm-count { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 0 10px currentColor; }
+        .sm-label { font-size: 9px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; }
+
+        @page { size: A4; margin: 0; }
+        @media print {
+            body * { visibility: hidden; }
+            #bio-view, .a4-page, .a4-page * { visibility: visible; }
+            .bio-toolbar, .input-panel { display: none !important; }
+            .preview-panel { background: white; padding: 0; display: block; overflow: visible; }
+            .a4-page { box-shadow: none; margin: 0 auto; width: 100%; height: 100vh; position: absolute; top: 0; left: 0; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+        }
+        #welcome-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100000; display: none; justify-content: center; align-items: center; flex-direction: column; transition: opacity 0.5s ease; }
+        .flash-text { font-size: 40px; font-weight: 900; color: var(--saffron); text-transform: uppercase; text-shadow: 0 0 30px var(--saffron); animation: zoomText 0.5s ease-out forwards; text-align: center; letter-spacing: 2px; }
+        @keyframes zoomText { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .laser-h { position: absolute; background: var(--primary); z-index: 50; opacity: 0.8; box-shadow: 0 0 15px var(--primary-bright); height: 2px; width: 100%; left: 0; background: linear-gradient(90deg, transparent, var(--primary-bright), var(--primary), transparent); animation: scanH 4s infinite linear; }
+        @keyframes scanH { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .header { background: var(--panel); backdrop-filter: blur(10px); padding: 0 20px; display: flex; justify-content: space-between; align-items: center; height: 75px; width: 100%; flex-shrink: 0; position: relative; overflow: hidden; border: none; }
+        .header .laser-h { bottom: 0; }
+        footer { background: var(--panel) !important; padding: 0 25px; height: 35px; width: 100%; display: flex; align-items: center; position: absolute; bottom: 0; left: 0; overflow: hidden; color: var(--text-muted) !important; font-size: 11px; font-weight: 600; border: none; z-index: 100; }
+        footer .laser-h { top: 0; animation-delay: 2s; }
+        .clock-hud { display: flex; flex-direction: column; align-items: center; background: #000; border: 2px solid var(--primary); padding: 2px 30px; min-width: 200px; clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0% 50%); position: absolute; left: 50%; transform: translateX(-50%); z-index: 10; box-shadow: 0 0 15px rgba(0,0,0,0.8); }
+        .clock-hud::after { content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: var(--primary); animation: scanClock 4s infinite linear; opacity: 0.8; box-shadow: 0 0 10px var(--primary); }
+        @keyframes scanClock { 0% {left:0;} 50% {left:98%;} 100% {left:0;} }
+        #clock-display { font-family: 'Courier New', monospace; font-size: 28px; color: var(--primary-bright); font-weight: 900; text-shadow: 0 0 5px var(--primary-soft); letter-spacing: 1px; line-height: 1.1; }
+        #date-display { color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .status-badge { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2); border: none; box-shadow: 0 0 10px rgba(0,0,0,0.2); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-left: auto; margin-right: 20px; }
+        .led { width: 8px; height: 8px; border-radius: 50%; transition: 0.3s; }
+        .online-mode { color: var(--green); } .online-mode .led { background: var(--green); box-shadow: 0 0 8px var(--green); }
+        .offline-mode { color: var(--red); } .offline-mode .led { background: var(--red); animation: blink 0.5s infinite; }
+        .header-btns { display: flex; gap: 10px; }
+        .head-btn { background: rgba(255, 255, 255, 0.08); border: none; color: #fff; padding: 8px 16px; cursor: pointer; font-weight: 700; border-radius: 6px; transition: 0.2s; font-size: 11px; letter-spacing: 0.5px; }
+        .head-btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary-soft); }
+        .content { display: flex; height: calc(100vh - 110px); overflow: hidden; width: 100%; }
+        .dashboard { flex: 1; padding: 0 25px 25px 25px; position: relative; overflow-y: scroll; }
+        .sidebar-left { width: 280px; background: rgba(30, 41, 59, 0.5); padding: 20px; display: flex; flex-direction: column; gap: 15px; position: relative; border: none; flex-shrink: 0; overflow-y: scroll; }
+        .sidebar-right { width: 300px; background: rgba(30, 41, 59, 0.5); padding: 20px; display: flex; flex-direction: column; gap: 15px; position: relative; border: none; flex-shrink: 0; overflow-y: scroll;}
+        .cat-section { margin-bottom: 25px; }
+        .cat-header { display: flex; align-items: center; gap: 10px; background: linear-gradient(to right, var(--primary-dim), transparent); border-left: 3px solid var(--primary); padding: 8px 15px; margin: 15px 0 15px 0; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-main); }
+        .cat-header i { color: var(--primary); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; padding-bottom: 20px; }
+        .card { position: relative; background: #0f172a; padding: 1px; border-radius: 8px; overflow: hidden; z-index: 1; height: 140px; transition: 0.3s; animation: popIn 0.5s forwards; border: none; }
+        .card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(transparent, transparent, transparent, var(--primary-dim)); animation: rotateMagic 6s linear infinite; z-index: -2; opacity: 0.4; filter: blur(8px); }
+        .card:hover::before { background: conic-gradient(transparent, transparent, transparent, var(--primary)); opacity: 0.8; filter: blur(5px); animation-duration: 3s; }
+        .card-inner-content { background: rgba(17, 24, 39, 0.98); border-radius: 7px; padding: 15px; height: 100%; position: relative; z-index: -1; display: flex; flex-direction: column; justify-content: space-between; }
+        .card:hover { transform: translateY(-3px); }
+        @keyframes rotateMagic { 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} }
+        @keyframes popIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .card-icon { width: 32px; height: 32px; font-size: 12px; background: var(--primary-dim); border-radius: 6px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; color: var(--primary-bright); }
+        .card h3 { color: var(--text-main); font-weight: 700; margin: 0; font-size: 12px; letter-spacing: 0.5px; white-space: normal; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; width: 100%; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; }
+        .btn-act { display: flex; justify-content: center; align-items: center; height: 34px; padding: 0 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 11px; font-weight: 800; transition: all 0.3s ease; }
+        .btn-open { background: linear-gradient(135deg, var(--primary), #0891b2); color: #000 !important; flex: 1; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(6, 182, 212, 0.2); }
+        .btn-open:hover { background: linear-gradient(135deg, var(--primary-bright), var(--primary)); box-shadow: 0 6px 15px rgba(6, 182, 212, 0.4); transform: translateY(-2px); }
+        .btn-edit { display: none !important; width: 34px; background: rgba(255, 153, 51, 0.15); color: var(--saffron); }
+        body.edit-mode-active .btn-edit { display: flex !important; }
+        .btn-edit:hover { background: rgba(255, 153, 51, 0.3); color: #fff; box-shadow: 0 0 10px rgba(255, 153, 51, 0.3); }
+        .owner-card { position: relative; background: #020617; padding: 1px; border-radius: 12px; text-align: center; overflow: hidden; z-index: 1; box-shadow: 0 5px 15px -5px rgba(0,0,0,0.5); }
+        .owner-card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(transparent, transparent, transparent, var(--primary)); animation: rotateMagic 4s linear infinite; z-index: -2; opacity: 0.5; filter: blur(5px);}
+        .owner-inner { background: #0f172a; border-radius: 11px; padding: 20px 15px; height: 100%; position: relative; z-index: -1; }
+        .profile-container { position: relative; display: inline-block; margin-bottom: 10px; }
+        .profile-pic { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; object-position: top; box-shadow: 0 0 15px var(--primary-soft); }
+        .owner-name { font-size: 16px; font-weight: 800; color: #fff; margin: 0; letter-spacing: 0.5px; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .owner-role { font-size: 10px; color: var(--primary); font-weight: 700; margin-top: 2px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+        .tagline { font-size: 11px; color: #94a3b8; margin-bottom: 15px; line-height: 1.4; font-style: italic; opacity: 0.8; }
+        .stats-grid { display: flex; justify-content: space-between; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; margin-bottom: 15px; }
+        .stat-box { text-align: center; flex: 1; border-right: 1px solid rgba(255,255,255,0.05); }
+        .stat-box:last-child { border: none; }
+        .stat-val { font-size: 13px; font-weight: 800; color: #fff; }
+        .stat-lbl { font-size: 8px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; letter-spacing:0.5px; }
+        .owner-details { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+        .detail-item { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text-main); padding: 5px 8px; border-radius: 6px; transition: 0.3s; background: rgba(255,255,255,0.02); }
+        .detail-item:hover { background: rgba(6, 182, 212, 0.1); }
+        .detail-icon { width: 22px; height: 22px; background: rgba(6, 182, 212, 0.1); border-radius: 6px; display: flex; justify-content: center; align-items: center; color: var(--primary); font-size: 10px; }
+        .gm-panel, .day-hud, .net-monitor, .hack-term { border: 1px solid rgba(6, 182, 212, 0.3); box-shadow: 0 0 8px rgba(0, 0, 0, 0.3); border-radius: 8px; transition: 0.3s; }
+        .gm-panel:hover, .day-hud:hover, .net-monitor:hover, .hack-term:hover { box-shadow: 0 0 20px var(--primary-dim); border-color: var(--primary-bright); transform: translateY(-3px); }
+        input, textarea, select { width: 100%; padding: 12px 15px; background: var(--dark); border: 1px solid var(--border-color); color: var(--text-main); margin-bottom: 12px; border-radius: 6px; font-family: 'Segoe UI', sans-serif; transition:0.3s; font-size: 13px; }
+        input:focus, textarea:focus, select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 10px var(--primary-dim); outline: none; }
+        .gm-panel { background: var(--panel); overflow: hidden; }
+        .gm-header { background: var(--dark); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .gm-title { font-weight: 700; color: var(--gmail); display: flex; align-items: center; gap: 8px; }
+        .gm-inbox-btn { background: rgba(255,255,255,0.05); color: var(--text-main); border: none; padding: 6px 14px; border-radius: 6px; font-size: 11px; cursor: pointer; transition:0.3s; }
+        .gm-inbox-btn:hover { background: rgba(234, 67, 53, 0.2); color: var(--gmail); }
+        .gm-body { padding: 20px; }
+        .gm-send { width: 100%; background: var(--gmail); border: none; color: white; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.3s; }
+        .gm-send:hover { box-shadow: 0 0 15px rgba(234, 67, 53, 0.5); }
+        .day-hud { background: var(--panel); padding: 20px; text-align: center; }
+        .orb { width: 12px; height: 12px; background: var(--primary-bright); border-radius: 50%; margin: 0 auto 10px; box-shadow: 0 0 15px var(--primary); animation: pulse 2s infinite alternate; }
+        @keyframes pulse { to { transform: scale(1.4); opacity: 0.8; } }
+        .net-monitor { background: var(--panel); padding: 20px; }
+        .bars { display: flex; gap: 3px; height: 24px; align-items: flex-end; margin-top: 10px; }
+        .bar { flex: 1; background: var(--green); opacity: 0.2; } .bar.active { opacity: 1; box-shadow: 0 0 5px var(--green); }
+        .hack-term { margin-top: 25px; background: #000; overflow: hidden; }
+        .hack-head { background: #111; padding: 10px 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .hack-title { font-family: monospace; font-size: 11px; color: var(--primary); font-weight: bold; }
+        .hack-body { height: 150px; padding: 15px; font-family: monospace; font-size: 11px; color: var(--primary); overflow: hidden; background: #000; position:relative; }
+        .log-line { margin-bottom: 4px; }
+        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: var(--primary-dim); animation: scan 4s linear infinite; }
+        #search { position: sticky; top: 0; z-index: 100; margin-top: 25px; border: 1px solid var(--primary); box-shadow: 0 0 10px var(--primary-dim); background: rgba(15, 23, 42, 0.95); }
+        #sys-menu { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 10000; justify-content: center; align-items: center; }
+        .sys-content { background: var(--panel); padding: 35px; border: 2px solid var(--primary); text-align: center; width: 320px; border-radius: 16px; box-shadow: 0 0 30px var(--primary-dim); }
+        .sys-content button { border: none !important; }
+        @media screen and (max-width: 768px) {
+            .content { flex-direction: column; overflow-y: auto; height: calc(100vh - 95px); -webkit-overflow-scrolling: touch; }
+            .sidebar-left, .sidebar-right, .dashboard { width: 100%; height: auto; border: none; padding: 15px; flex-shrink: 0; padding-bottom: 30px; }
+            .clock-hud { display: none; }
+            .header { padding: 0 15px; height: 60px; }
+            .header div:nth-child(2) { font-size: 18px !important; }
+            .header span { display: none; }
+            .sidebar-left .laser-v, .sidebar-right .laser-v { display: none; }
+            .flash-text { font-size: 28px; }
+        }
+    ]]></b:skin>
+</head>
+<body>
+    <div id='welcome-flash'><div class='flash-text'>জয&#2492; শ&#2509;র&#2496; র&#2494;ম</div></div>
+    <div id='toast-container'/>
+
+    <div id='login-screen'>
+        <div class='login-box'>
+            <div class='login-profile-wrapper'>
+                <img alt='Admin' class='login-pic' src='https://i.ibb.co/gZnygDq3/o9x81-Q-K-copy.jpg'/>
+            </div>
+            <h3 class='login-title-text'>RUDRA DAS <i class='fa-solid fa-circle-check' style='font-size:16px; color:#06b6d4;'/></h3>
+            <p class='login-subtitle'>IT SOLUTION EXPERT</p>
+            
+            <div class='login-form-area'>
+                <input class='login-field' id='login-pass' placeholder='ENTER SECURITY CODE' type='password'/>
+                <button class='login-submit-btn' onclick='attemptLogin()'>UNLOCK SYSTEM</button>
+                <p class='login-msg' id='login-status'>WAITING...</p>
+                <p onclick='forgotPass()' style='margin-top:15px; cursor:pointer; color:#ff9933; font-size:11px; font-weight:bold; letter-spacing:1px; text-decoration:underline; opacity:0.8;'>FORGOT PASSWORD?</p>
+            </div>
+        </div>
+    </div>
+
+    <div id='custom-view' style='position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:20000; display:none; flex-direction:column;'>
+        <div style='background:#1e293b; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155;'>
+            <div id='custom-view-title' style='color:var(--primary); font-weight:800; font-size:18px; text-transform:uppercase;'>CUSTOM TOOL</div>
+            <button onclick='closeCustomView()' style='background:#ef4444; color:#fff; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer;'>CLOSE X</button>
+        </div>
+        <div id='custom-content-area' style='flex:1; overflow-y:auto; padding:20px; color:#fff;'/>
+    </div>
+
+    <div id='master-settings-view' style='display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:25000; justify-content:center; align-items:center; backdrop-filter:blur(5px);'>
+        <div style='background:#1e293b; padding:30px; border-radius:16px; width:340px; border:2px solid var(--primary); box-shadow:0 0 30px rgba(6,182,212,0.2); max-height:80vh; overflow-y:auto;'>
+            <h3 style='color:#fff; text-align:center; margin-top:0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px;'>SYSTEM CONTROL</h3>
+            <div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;'>
+                <div style='color:#fff; font-weight:bold; font-size:13px;'>BIO DATA ACCESS</div>
+                <label class='switch' style='position:relative; display:inline-block; width:40px; height:20px;'>
+                    <input id='toggle-bio' style='opacity:0; width:0; height:0;' type='checkbox'/>
+                    <span class='slider round' style='position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#ccc; transition:.4s; border-radius:34px;'/>
+                </label>
+            </div>
+            <div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;'>
+                <div style='color:#fff; font-weight:bold; font-size:13px;'>PHOTO STUDIO ACCESS</div>
+                <label class='switch' style='position:relative; display:inline-block; width:40px; height:20px;'>
+                    <input id='toggle-photo' style='opacity:0; width:0; height:0;' type='checkbox'/>
+                    <span class='slider round' style='position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#ccc; transition:.4s; border-radius:34px;'/>
+                </label>
+            </div>
+            <div style='margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;'>
+                <h4 style='color:var(--saffron); margin:0 0 10px 0; text-align:center;'>ADD CUSTOM FEATURE</h4>
+                <input id='cust-title' placeholder='Feature Name' style='width:100%; background:rgba(0,0,0,0.5); border:1px solid #444; color:#fff; padding:8px; margin-bottom:10px; border-radius:6px;' type='text'/>
+                <textarea id='cust-code' placeholder='Paste HTML/JS Code...' rows='4' style='width:100%; background:rgba(0,0,0,0.5); border:1px solid #444; color:#0f0; font-family:monospace; padding:8px; margin-bottom:10px; border-radius:6px; resize:vertical; font-size:11px;'/>
+                <button onclick='saveCustomExtension()' style='width:100%; padding:10px; background:linear-gradient(135deg, #d97706, #b45309); color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;'><i class='fa-solid fa-code'/> SAVE &amp; PUBLISH</button>
+            </div>
+            <div style='margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px; margin-bottom:20px;'>
+                <h4 style='color:var(--primary); margin:0 0 10px 0; text-align:center;'>CUSTOM LOGIN HTML</h4>
+                <div style='font-size:10px; color:#aaa; margin-bottom:5px;'>(Visual Only - Logic is Protected)</div>
+                <textarea id='custom-login-code' placeholder='Paste HTML...' rows='4' style='width:100%; background:rgba(0,0,0,0.5); border:1px solid #444; color:#0ff; font-family:monospace; padding:8px; margin-bottom:10px; border-radius:6px; resize:vertical; font-size:11px;'/>
+                <div style='display:flex; gap:10px;'>
+                    <button onclick='saveLoginDesign()' style='flex:1; padding:10px; background:linear-gradient(135deg, #0ea5e9, #0284c7); color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;'>UPDATE</button>
+                    <button onclick='resetLoginDesign()' style='width:80px; padding:10px; background:#475569; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;'>RESET</button>
+                </div>
+            </div>
+            <button onclick='saveMasterSettings()' style='width:100%; padding:12px; background:var(--green); color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px;'>APPLY SETTINGS</button>
+            <button onclick='closeMasterSettings()' style='width:100%; padding:10px; background:var(--red); color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;'>CLOSE</button>
+        </div>
+    </div>
+
+    <div id='main-view'>
+        <div id='sys-menu'>
+            <div class='sys-content'>
+                <h3 style='color:var(--text-main); margin-bottom:25px;'>SYSTEM MENU</h3>
+                <button onclick='openMasterSettings()' style='width:100%; padding:12px; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; margin-bottom:15px; cursor:pointer; border-radius:8px; font-weight:bold; transition:0.2s; border:none; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);'><i class='fa-solid fa-sliders'/> MASTER SETTINGS</button>
+                <button id='btn-custom-feature' onclick='openCustomView()' style='display:none; width:100%; padding:12px; background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; margin-bottom:15px; cursor:pointer; border-radius:8px; font-weight:bold; transition:0.2s; border:none; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);'><i class='fa-solid fa-puzzle-piece'/> <span id='menu-cust-title'>OPEN EXTENSION</span></button>
+                <button onclick='toggleEditMode()' style='width:100%; padding:12px; background:linear-gradient(135deg, #F59E0B, #D97706); color:#fff; margin-bottom:15px; cursor:pointer; border-radius:8px; font-weight:bold; transition:0.2s; border:none; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);'><i class='fa-solid fa-pen-to-square'/> TOGGLE EDIT MODE</button>
+                <button onclick='openBioData()' style='width:100%; padding:12px; background:linear-gradient(135deg, #10B981, #059669); color:#fff; margin-bottom:15px; cursor:pointer; border-radius:8px; font-weight:bold; transition:0.2s; border:none; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);'><i class='fa-solid fa-file-pdf'/> OPEN BIO DATA CREATOR</button>
+                <button onclick='openPhotoStudio()' style='width:100%; padding:12px; background:linear-gradient(135deg, #3B82F6, #2563EB); color:#fff; margin-bottom:15px; cursor:pointer; border-radius:8px; font-weight:bold; transition:0.2s; border:none; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);'><i class='fa-solid fa-camera'/> DIGITAL PHOTO STUDIO</button>
+                <button onclick='location.reload()' style='width:100%; padding:12px; background:rgba(255,255,255,0.05); color:var(--text-main); cursor:pointer; border-radius:8px; font-weight:bold; transition:0.2s;'>REFRESH SYSTEM</button>
+                <button onclick='logout()' style='width:100%; padding:12px; background:rgba(239, 68, 68, 0.2); border:1px solid #EF4444; color:var(--red); cursor:pointer; border-radius:8px; font-weight:bold; transition:0.2s; margin-bottom:15px;'>LOG OUT</button>
+                <button onclick='closeSys()' style='width:100%; padding:12px; background:rgba(255,255,255,0.05); color:var(--text-main); cursor:pointer; border-radius:8px; font-weight:bold; transition:0.2s;'>CLOSE MENU</button>
+            </div>
+        </div>
+        <div class='cyber-bg'><div class='grid-anim'/></div>
+        <header class='header'>
+            <div class='laser-h'/>
+            <div style='font-weight:800; font-size:24px; color:var(--text-main); display:flex; align-items:center; gap:10px; text-shadow: 0 0 15px rgba(0,0,0,0.5);'><i class='fa-solid fa-bolt' style='color:var(--primary); font-size:24px;'/> RONAK SYBER <span style='font-weight:400; font-size:14px; opacity:0.7; margin-top:4px;'>PRO</span></div>
+            <div class='clock-hud'><span id='clock-display'>00:00:00</span><span id='date-display' style='margin-top:2px;'>LOADING...</span></div>
+            <div class='status-badge online-mode' id='net-status'><div class='led'/><span id='net-text'>ONLINE</span></div>
+            <div class='header-btns'><button class='head-btn' onclick='window.toggleFull()'><i class='fa-solid fa-expand'/> FULL</button><button class='head-btn' onclick='openSys()'><i class='fa-solid fa-gear'/> SYS</button></div>
+        </header>
+        <div class='content'>
+            <aside class='sidebar-left'>
+                <div class='laser-v'/>
+                <b:section id='sidebar-left' showaddelement='yes'>
+                  <b:widget id='HTML1' locked='false' title='RonakOS' type='HTML' version='2' visible='true'>
+                    <b:widget-settings>
+                      <b:widget-setting name='content'><![CDATA[<div class='sidebar-left' style='width:100%; padding:0; border:none; background:transparent;'>
+                        <div class='owner-card'>
+                            <div class='owner-inner'>
+                                <div class='profile-container'><img class='profile-pic' src='https://i.ibb.co/gZnygDq3/o9x81-Q-K-copy.jpg' alt='Admin'/></div>
+                                <h3 class='owner-name'>RUDRA DAS <i class='fa-solid fa-circle-check' style='font-size:12px; color:var(--primary);'></i></h3>
+                                <p class='owner-role'>IT SOLUTION EXPERT</p>
+                                <div class='tagline'>"Transforming complex problems into digital solutions. Your trusted partner for online services."</div>
+                                <div class='stats-grid'>
+                                    <div class='stat-box'><div class='stat-val'>500+</div><div class='stat-lbl'>PROJECTS</div></div>
+                                    <div class='stat-box'><div class='stat-val'>4.9</div><div class='stat-lbl'>RATING</div></div>
+                                    <div class='stat-box'><div class='stat-val'>24/7</div><div class='stat-lbl'>SUPPORT</div></div>
+                                </div>
+                                <div class='owner-details'>
+                                    <div class='detail-item'><div class='detail-icon'><i class="fa-solid fa-location-dot"></i></div><div>West Bengal, India</div></div>
+                                    <div class='detail-item'><div class='detail-icon'><i class='fa-solid fa-envelope' style='color:var(--red)'></i></div><div style='font-size:10px;'>ronaksyber@gmail.com</div></div>
+                                    <div class='detail-item'><div class='detail-icon'><i class='fa-solid fa-phone' style='color:var(--green)'></i></div><div>+91 8918448090</div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style='margin-top:25px; border-top:1px solid var(--border-color); padding-top:20px;'>
+                            <div style='font-size:12px; color:var(--primary); margin-bottom:12px; font-weight:700; letter-spacing:1px;'>ADD / EDIT LINK</div>
+                            <select id='b-cat'>
+                                <option value="Identity &amp; Documents" />Identity &amp; Documents
+                                <option value="Govt Services &amp; Land" />Govt Services &amp; Land
+                                <option value="Education &amp; Jobs" />Education &amp; Jobs
+                                <option value="Tools &amp; Utility" />Tools &amp; Utility
+                            </select>
+                            <input id='b-name' placeholder='Name' type='text'/>
+                            <input id='b-url' placeholder='Link (https://)' type='text'/>
+                            <button id='add-btn' onclick='saveLinkToCloud()' style='width:100%; background:var(--primary); border:none; padding:10px; color:#000; font-weight:bold; cursor:pointer; border-radius:8px; transition:0.2s;'>SAVE TO CLOUD</button>
+                        </div>
+                        <div style='background:rgba(16, 185, 129, 0.08); border:1px solid var(--green); box-shadow:0 0 5px rgba(16,185,129,0.2); padding:15px; border-radius:12px; margin-top:25px;'>
+                            <div style='color:var(--green); font-size:12px; font-weight:bold; margin-bottom:12px; display:flex; align-items:center; gap:8px;'><i class='fa-brands fa-whatsapp' style='font-size:16px;'></i> WHATSAPP SENDER</div>
+                            <input id='wa-phone' placeholder='Customer Number' type='text' style='background:var(--dark);'/>
+                            <textarea id='wa-msg' placeholder='Type message here...' rows='3' style='resize:none; height:60px; background:var(--dark);'></textarea>
+                            <button onclick='window.sendWA()' style='width:100%; background:var(--green); border:none; padding:10px; font-weight:bold; cursor:pointer; color:#fff; border-radius:8px; transition:0.2s;'>SEND NOW <i class='fa-solid fa-paper-plane'></i></button>
+                        </div>
+                    </div>
+                    <div class='dashboard' style='display:none;'></div><div class='sidebar-right' style='display:none;'></div>]]></b:widget-setting>
+                    </b:widget-settings>
+                    <b:includable id='main'><data:content/></b:includable>
+                  </b:widget>
+                </b:section>
+            </aside>
+            <main class='dashboard'>
+                <input id='search' onkeyup='filter()' placeholder='Search system...' style='width:100%; padding:14px 20px; background:rgba(30, 30, 30, 0.95); backdrop-filter:blur(10px); color:var(--text-main); margin-top:25px; margin-bottom:15px; position:sticky; top:0; z-index:100; border-radius:12px; font-size:14px;' type='text'/>
+                <div id='grid'/>
+            </main>
+            <aside class='sidebar-right'>
+                <div class='laser-v'/>
+                <div class='day-hud'>
+                    <div class='orb'/>
+                    <div id='bengali-day' style='font-size:20px; color:var(--text-main); font-weight:800; letter-spacing:0.5px; margin-top:8px;'>...</div>
+                    <div style='font-size:11px; color:var(--text-muted); font-weight:600; margin-top:4px;'>SYSTEM DATE</div>
+                </div>
+                
+                <div class='storage-monitor'>
+                    <div class='sm-title'><i class='fa-solid fa-database'/> CLOUD STORAGE</div>
+                    <div class='sm-grid'>
+                        <div class='sm-box bio-stat'>
+                            <div class='sm-icon'><i class='fa-solid fa-file-invoice'/></div>
+                            <div class='sm-count' id='count-bio'>0</div>
+                            <div class='sm-label'>BIO DATA</div>
+                        </div>
+                        <div class='sm-box photo-stat'>
+                            <div class='sm-icon'><i class='fa-solid fa-images'/></div>
+                            <div class='sm-count' id='count-photo'>0</div>
+                            <div class='sm-label'>PHOTOS</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class='gm-panel'>
+                    <div class='gm-header'><div class='gm-title'><i class='fa-solid fa-envelope'/> GMAIL PRO</div><button class='gm-inbox-btn' onclick='window.open(&apos;https://mail.google.com/mail/u/0/#inbox&apos;, &apos;_blank&apos;)'>OPEN INBOX</button></div>
+                    <div class='gm-body'>
+                        <input class='gm-input' id='gm-to' placeholder='To (Recipient Email)' type='email'/>
+                        <input class='gm-input' id='gm-sub' placeholder='Subject' type='text'/>
+                        <textarea class='gm-input' id='gm-msg' placeholder='Write your message...' rows='4' style='resize:none; height:80px;'/>
+                        <button class='gm-send' onclick='sendGM()'>SEND EMAIL <i class='fa-solid fa-paper-plane'/></button>
+                    </div>
+                </div>
+                <div class='hack-term'>
+                    <div class='hack-head'><span class='hack-title'><i class='fa-solid fa-terminal'/> SYSTEM_LOG</span><div class='hack-stat'><div class='hack-dot'/> MONITORING</div></div>
+                    <div class='hack-body' id='hack-console'><div class='scan-line'/></div>
+                </div>
+            </aside>
+        </div>
+        <footer>
+            <div class='laser-h'/>
+            <div style='flex:1;'>SYSTEM ONLINE | RONAK SYBER OS PRO</div>
+            <div>USER: RUDRA DAS | STORAGE: CLOUD (FIREBASE)</div>
+        </footer>
+    </div>
+
+    <div id='bio-view'><div class='bio-toolbar'><div style='font-size:18px; font-weight:bold;'><i class='fa-solid fa-file-invoice'/> BIO-DATA CREATOR</div><div><input id='cust-mobile' placeholder='Customer Mobile (To Load/Save)' style='padding:5px; border-radius:4px; border:none; width:200px; color:#fff; background: rgba(0,0,0,0.3); font-weight:bold;' type='text'/><button class='bio-btn' onclick='resetBioForm()' style='background:#e67e22;' type='button'>NEW BIO</button><button class='bio-btn' onclick='loadBioData()' type='button'>LOAD DATA</button><button class='bio-btn save' onclick='saveBioData()' type='button'>SAVE DATA</button><button class='bio-btn back' onclick='closeBioData()' type='button'><i class='fa-solid fa-arrow-left'/> BACK TO DASHBOARD</button></div></div><div class='bio-container'><div class='input-panel'><h3 style='margin-top:0; border-bottom:2px solid #3498db; padding-bottom:5px;'>Edit Details</h3><div class='bio-group'>Photo (Auto Compressed)</div><input accept='image/*' class='bio-inp' onchange='loadPhoto(event)' type='file'/><div class='bio-group'>AI Objective</div><div class='bio-row'><select class='bio-inp bio-col' id='ai_qual' onchange='genObj()'><option value='10th'>Secondary</option><option value='12th'>HS</option><option value='Grad'>Graduate</option></select><select class='bio-inp bio-col' id='ai_exp' onchange='genObj()'><option value='Fresh'>Fresher</option><option value='Exp'>Experienced</option></select></div><div class='bio-group'>Personal Info</div><div class='fit-content-wrapper'><input class='bio-inp auto-resize-text' id='name' oninput='upd(); adjustFontSize(this)' placeholder='Full Name' style='border:none; margin:0;' type='text'/></div><input class='bio-inp' id='mobile' oninput='upd()' placeholder='Mobile' style='color:#000; background:#fff; border:1px solid #ccc;' type='text'/><div class='fit-content-wrapper'><input class='bio-inp auto-resize-text' id='email' oninput='upd(); adjustFontSize(this)' placeholder='Email Address' style='border:none; margin:0;' type='email'/></div><input class='bio-inp' id='father' oninput='upd()' placeholder='Father Name' style='color:#000; background:#fff; border:1px solid #ccc;' type='text'/><div class='bio-group' style='margin-top:5px; font-size:12px;'>Date of Birth</div><div class='dob-group'><input class='dob-box' id='dob_d' maxlength='2' oninput='handleDob(this)' placeholder='DD' style='color:#000; background:#fff;' type='text'/><span style='color:#000;'>/</span><input class='dob-box' id='dob_m' maxlength='2' oninput='handleDob(this)' placeholder='MM' style='color:#000; background:#fff;' type='text'/><span style='color:#000;'>/</span><input class='dob-box' id='dob_y' maxlength='4' oninput='handleDob(this)' placeholder='YYYY' style='color:#000; background:#fff;' type='text'/></div><div class='bio-row' style='margin-top:10px;'><select class='bio-inp bio-col' id='gender' onchange='upd()' style='color:#000; background:#fff;'><option>Male</option><option>Female</option></select><select class='bio-inp bio-col' id='marital' onchange='upd()' style='color:#000; background:#fff;'><option>Unmarried</option><option>Married</option></select></div><select class='bio-inp' id='religion' onchange='upd()' style='color:#000; background:#fff;'><option>Islam</option><option>Hinduism</option><option>Christianity</option></select><input class='bio-inp' id='nation' oninput='upd()' style='color:#000; background:#fff; border:1px solid #ccc;' type='text' value='Indian'/><div class='bio-group'>Technical / Diploma 1</div><div class='fit-content-wrapper'><input class='bio-inp auto-resize-text' id='tech_course_1' list='course_list' oninput='upd(); adjustFontSize(this)' placeholder='Course Name (e.g. DCA)' style='border:none; margin:0;' type='text'/><datalist id='course_list'><option value='Diploma in Computer Application (DCA)'/><option value='ITI (Electrician)'/><option value='ITI (Fitter)'/><option value='B.Tech'/><option value='Diploma in Engineering'/></datalist></div><div class='fit-content-wrapper'><input class='bio-inp auto-resize-text' id='tech_inst_1' list='inst_list' oninput='upd(); adjustFontSize(this)' placeholder='Institute (e.g. Youth)' style='border:none; margin:0;' type='text'/><datalist id='inst_list'><option value='Skill India'/><option value='Utkarsh Bangla'/><option value='Youth Computer Training Centre'/><option value='WBSCTE'/></datalist></div><input class='bio-inp' id='tech_marks_1' oninput='upd()' placeholder='Details/Grade' style='color:#000; background:#fff; border:1px solid #ccc;' type='text'/><div class='bio-group'>Technical / Diploma 2 (Optional)</div><div class='fit-content-wrapper'><input class='bio-inp auto-resize-text' id='tech_course_2' list='course_list' oninput='upd(); adjustFontSize(this)' placeholder='Course Name' style='border:none; margin:0;' type='text'/></div><div class='fit-content-wrapper'><input class='bio-inp auto-resize-text' id='tech_inst_2' list='inst_list' oninput='upd(); adjustFontSize(this)' placeholder='Institute' style='border:none; margin:0;' type='text'/></div><input class='bio-inp' id='tech_marks_2' oninput='upd()' placeholder='Details/Grade' style='color:#000; background:#fff; border:1px solid #ccc;' type='text'/><div class='bio-group'>Language</div><div class='lang-row'><input checked='checked' class='lang-chk' id='chk_ben' onchange='upd()' type='checkbox'/> Bengali <select class='lang-sel' id='lvl_ben' onchange='upd()'><option>Fluent</option><option>Good</option></select></div><div class='lang-row'><input checked='checked' class='lang-chk' id='chk_eng' onchange='upd()' type='checkbox'/> English <select class='lang-sel' id='lvl_eng' onchange='upd()'><option>Basic</option><option>Good</option></select></div><div class='lang-row'><input checked='checked' class='lang-chk' id='chk_hin' onchange='upd()' type='checkbox'/> Hindi <select class='lang-sel' id='lvl_hin' onchange='upd()'><option>Basic</option><option>Good</option></select></div><div class='bio-group'>Address</div><input class='bio-inp' id='pin' maxlength='6' oninput='handlePin(this.value)' placeholder='PIN Code (Auto-Fill)' type='text'/><label>Present Addr.</label><div class='bio-row'><select class='bio-inp' id='pres_rel_type' onchange='upd()' style='width:30%;'><option>C/O</option><option>W/O</option></select><input class='bio-inp' id='pres_rel_name' oninput='upd()' placeholder='Name' style='width:70%;' type='text'/></div><div class='bio-row'><input class='bio-inp bio-col' id='vill' oninput='sync()' placeholder='Vill / House / Street' type='text'/><select class='bio-inp bio-col' id='po' onchange='sync()'><option value=''>PO</option></select></div><div class='bio-row'><input class='bio-inp bio-col' id='ps' list='ps_list' oninput='sync()' placeholder='Select or Type PS' type='text'/><datalist id='ps_list'/><input class='bio-inp bio-col' id='dist' oninput='sync()' placeholder='Dist' type='text'/></div><input class='bio-inp' id='state' list='state_list' oninput='sync()' placeholder='Select or Type State' type='text' value='West Bengal'/><datalist id='state_list'><option value='West Bengal'/><option value='Bihar'/><option value='Jharkhand'/><option value='Odisha'/><option value='Assam'/><option value='Sikkim'/><option value='Tripura'/></datalist><div style='margin:5px 0; font-size:12px;'><input id='same' onchange='sync()' type='checkbox'/> Same Permanent Address?</div><label>Permanent Addr.</label><div class='bio-row'><select class='bio-inp' id='perm_rel_type' onchange='upd()' style='width:30%;'><option>C/O</option><option>W/O</option></select><input class='bio-inp' id='perm_rel_name' oninput='upd()' placeholder='Name' style='width:70%;' type='text'/></div><input class='bio-inp' id='p_vill' oninput='upd()' placeholder='Vill / House / Street' type='text'/><input class='bio-inp' id='p_po' oninput='upd()' placeholder='PO' type='text'/><input class='bio-inp' id='p_ps' oninput='upd()' placeholder='PS' type='text'/><input class='bio-inp' id='p_dist' oninput='upd()' placeholder='Dist' type='text'/><input class='bio-inp' id='p_state' oninput='upd()' placeholder='State' type='text'/><input class='bio-inp' id='p_pin' oninput='upd()' placeholder='Pin' type='text'/><input class='bio-inp' id='aadhar' oninput='upd()' placeholder='Aadhar No' type='text'/><div class='bio-group'>Education</div><datalist id='board_list'><option value='WBBSE (Madhyamik)'/><option value='WBCHSE (Higher Secondary)'/><option value='WBBME (Madrasah Board)'/><option value='WBSCVT (Vocational)'/><option value='WB Council of Rabindra Open Schooling'/><option value='NIOS'/><option value='CBSE'/><option value='ICSE'/></datalist><datalist id='stream_list'><option value='Arts'/><option value='Science'/><option value='Commerce'/><option value='Vocational'/></datalist><datalist id='univ_list'><option value='Raiganj University'/><option value='University of North Bengal'/><option value='University of Calcutta'/><option value='Vidyasagar University'/><option value='Netaji Subhas Open University'/><option value='IGNOU'/></datalist><datalist id='subject_list'><option value='Bengali (Hons)'/><option value='English (Hons)'/><option value='History (Hons)'/><option value='Political Science (Hons)'/><option value='Geography (Hons)'/><option value='BA General'/><option value='BSc General'/></datalist><label>Secondary (10th)</label><div class='bio-row'><input class='bio-inp bio-col' id='mp_board' list='board_list' oninput='upd()' placeholder='Board'/><input class='bio-inp bio-col' id='mp_disc' oninput='upd()' placeholder='General' value='General'/></div><div class='bio-row'><input class='bio-inp bio-col' id='mp_year' oninput='upd()' placeholder='Year'/><input class='bio-inp bio-col' id='mp_marks' oninput='upd()' placeholder='Marks (%)'/></div><label>Higher Secondary (12th)</label><div class='bio-row'><input class='bio-inp bio-col' id='hs_board' list='board_list' oninput='upd()' placeholder='Board'/><input class='bio-inp bio-col' id='hs_disc' list='stream_list' oninput='upd()' placeholder='Stream'/></div><div class='bio-row'><input class='bio-inp bio-col' id='hs_year' oninput='upd()' placeholder='Year'/><input class='bio-inp bio-col' id='hs_marks' oninput='upd()' placeholder='Marks (%)'/></div><label>Graduation</label><div class='bio-row'><input class='bio-inp bio-col' id='gr_name' oninput='upd()' placeholder='Degree (BA/BSc)'/><input class='bio-inp bio-col' id='gr_board' list='univ_list' oninput='upd()' placeholder='University'/></div><div class='bio-row'><input class='bio-inp bio-col' id='gr_disc' list='subject_list' oninput='upd()' placeholder='Subject/Hons'/><input class='bio-inp bio-col' id='gr_year' oninput='upd()' placeholder='Year'/></div><input class='bio-inp' id='gr_marks' oninput='upd()' placeholder='Marks (%)'/><button class='bio-btn' onclick='smartPrint()' style='width:100%; margin-left:0; margin-top:15px; background:#e67e22;'>PRINT / SAVE PDF</button></div><div class='preview-panel'><div class='a4-page' id='cv-page-content'><div class='cv-content-wrapper'><div style='text-align:center; border-bottom:3px solid #000; margin-bottom:15px;'><h1 style='font-size:34pt; margin:0;'>Curriculum Vitae</h1></div><div class='cv-header-wrapper'><div class='cv-photo-box'><img id='cv-photo' src='' style='display:none; width:100%; height:100%; object-fit:cover;'/></div><div class='cv-main-content'><div class='cv-identity'><div id='cv-name' style='font-size:24pt; font-weight:bold; color:#002d72; text-transform:uppercase; line-height:1.1; margin-bottom:5px;'>NAME HERE</div><div style='font-size:12pt; font-weight:bold;'><div class='hidden' id='r-mob'>📞 <span id='cv-mob'/></div><div class='hidden' id='r-em'>&#9993; <span id='cv-em'/></div></div></div><div class='cv-address-block'><div style='flex:1;'><u style='font-weight:bold; color:#002d72;'>Present Address:</u><table style='width:100%; border-collapse: collapse; font-size: 11pt;'><tr class='hidden' id='r-pr-rel'><td style='width:50px; font-weight:bold; vertical-align: top;'><span id='cv-pr-typ'/></td><td style='width:10px; vertical-align: top;'>:</td><td><span id='cv-pr-nm'/></td></tr><tr class='hidden' id='r-vill'><td style='font-weight:bold; vertical-align: top;'>Vill</td><td style='vertical-align: top;'>:</td><td><span id='cv-vill'/></td></tr><tr class='hidden' id='r-po'><td style='font-weight:bold; vertical-align: top;'>PO</td><td style='vertical-align: top;'>:</td><td><span id='cv-po'/></td></tr><tr class='hidden' id='r-ps'><td style='font-weight:bold; vertical-align: top;'>PS</td><td style='vertical-align: top;'>:</td><td><span id='cv-ps'/></td></tr><tr class='hidden' id='r-dist'><td style='font-weight:bold; vertical-align: top;'>Dist</td><td style='vertical-align: top;'>:</td><td><span id='cv-dist'/></td></tr><tr class='hidden' id='r-pin'><td style='font-weight:bold; vertical-align: top;'>PIN</td><td style='vertical-align: top;'>:</td><td><span id='cv-pin'/></td></tr><tr class='hidden' id='r-state'><td style='font-weight:bold; vertical-align: top;'>State</td><td style='vertical-align: top;'>:</td><td><span id='cv-state'/></td></tr></table></div><div style='flex:1; border-left:1px dashed #ccc; padding-left:10px;'><u style='font-weight:bold; color:#002d72;'>Permanent Address:</u><table style='width:100%; border-collapse: collapse; font-size: 11pt;'><tr class='hidden' id='r-pm-rel'><td style='width:50px; font-weight:bold; vertical-align: top;'><span id='cv-pm-typ'/></td><td style='width:10px; vertical-align: top;'>:</td><td><span id='cv-pm-nm'/></td></tr><tr class='hidden' id='r-p-vill'><td style='font-weight:bold; vertical-align: top;'>Vill</td><td style='vertical-align: top;'>:</td><td><span id='cv-p-vill'/></td></tr><tr class='hidden' id='r-p-po'><td style='font-weight:bold; vertical-align: top;'>PO</td><td style='vertical-align: top;'>:</td><td><span id='cv-p-po'/></td></tr><tr class='hidden' id='r-p-ps'><td style='font-weight:bold; vertical-align: top;'>PS</td><td style='vertical-align: top;'>:</td><td><span id='cv-p-ps'/></td></tr><tr class='hidden' id='r-p-dist'><td style='font-weight:bold; vertical-align: top;'>Dist</td><td style='vertical-align: top;'>:</td><td><span id='cv-p-dist'/></td></tr><tr class='hidden' id='r-p-pin'><td style='font-weight:bold; vertical-align: top;'>PIN</td><td style='vertical-align: top;'>:</td><td><span id='cv-p-pin'/></td></tr><tr class='hidden' id='r-p-state'><td style='font-weight:bold; vertical-align: top;'>State</td><td style='vertical-align: top;'>:</td><td><span id='cv-p-state'/></td></tr><tr class='hidden' id='r-aad'><td style='font-weight:bold; vertical-align: top;'>Aadhar</td><td style='vertical-align: top;'>:</td><td><span id='cv-aad'/></td></tr></table></div></div></div></div><div class='split-container'><div class='split-left'><h3 style='border-bottom:2px solid #002d72; color:#002d72; margin-top:10px;'>PERSONAL DETAILS</h3><table style='width:100%; font-weight:bold;'><tr class='hidden' id='r-fath'><td width='150'>Father&#39;s Name</td><td>: <span id='cv-fath'/></td></tr><tr class='hidden' id='r-dob'><td>Date of Birth</td><td>: <span id='cv-dob'/></td></tr><tr><td>Gender</td><td>: <span id='cv-gen'/></td></tr><tr><td>Marital Status</td><td>: <span id='cv-mar'/></td></tr><tr><td>Nationality</td><td>: <span id='cv-nat'/></td></tr><tr><td>Religion</td><td>: <span id='cv-rel'/></td></tr></table></div><div class='split-right hidden' id='r-tech'><h3 style='border-bottom:2px solid #002d72; color:#002d72; margin-top:10px;'>TECHNICAL / DIPLOMA</h3><table style='width:100%; font-weight:bold; font-size:10pt; border-collapse:collapse;'><tr class='hidden' id='r-tech-1'><td style='padding-bottom:5px;'><div id='cv-tech-c1' style='font-size:11pt; color:#000;'/><div style='font-weight:normal;'>From: <span id='cv-tech-i1'/> <span id='cv-tech-m1'/></div></td></tr><tr class='hidden' id='r-tech-2'><td style='padding-top:5px; border-top:1px dashed #ccc;'><div id='cv-tech-c2' style='font-size:11pt; color:#000;'/><div style='font-weight:normal;'>From: <span id='cv-tech-i2'/> <span id='cv-tech-m2'/></div></td></tr></table></div></div><h3 style='border-bottom:2px solid #002d72; color:#002d72; margin-top:15px;'>CAREER OBJECTIVE</h3><div id='cv-obj' style='text-align:justify;'/><h3 style='border-bottom:2px solid #002d72; color:#002d72; margin-top:15px;'>EDUCATION</h3><table border='1' cellpadding='5' cellspacing='0' style='width:100%; border-collapse:collapse; text-align:center;'><tr style='background:#e3f2fd; font-weight:bold;'><th>Exam</th><th>Stream / Sub</th><th>Board / University</th><th>Marks</th><th>Year</th></tr><tr class='hidden' id='r-mp'><td>Secondary</td><td id='c-m-d'/><td id='c-m-b'/><td id='c-m-m'/><td id='c-m-y'/></tr><tr class='hidden' id='r-hs'><td>Higher Secondary</td><td id='c-h-d'/><td id='c-h-b'/><td id='c-h-m'/><td id='c-h-y'/></tr><tr class='hidden' id='r-gr'><td id='c-g-n'/><td id='c-g-d'/><td id='c-g-b'/><td id='c-g-m'/><td id='c-g-y'/></tr></table><div class='hidden' id='r-lng' style='margin-top:15px;'><h3 style='border-bottom:2px solid #002d72; color:#002d72; margin-top:0px;'>LANGUAGE PROFICIENCY</h3><div id='cv-lng' style='font-weight:bold;'/></div><h3 style='border-bottom:2px solid #002d72; color:#002d72; margin-top:15px;'>DECLARATION</h3><div style='text-align:justify;'>I Hereby Declare That All The Information Provided Above Is True And Correct To The Best Of My Knowledge And Belief.</div></div><div class='cv-footer-wrapper'><div style='margin-top:20px; display:flex; justify-content:space-between; align-items:flex-end;'><div>Date:<br/>Place: <span id='cv-pl'/></div><div id='qrcode'/><div style='border-top:1px solid #000; width:150px; text-align:center;'>Signature</div></div></div></div></div></div></div>
+    
+    <div id='photo-view'>
+        <div class='bio-toolbar'>
+            <div class='ps-title'><i class='fa-solid fa-camera'/> DIGITAL PHOTO STUDIO</div>
+            <button class='bio-btn back' onclick='closePhotoStudio()'><i class='fa-solid fa-arrow-left'/> BACK</button>
+        </div>
+        
+        <div class='photo-studio-container'>
+            <div class='ps-layout'>
+                <div class='ps-upload-zone'>
+                    <div class='ps-box-title'><i class='fa-solid fa-cloud-arrow-up'/> UPLOAD ZONE</div>
+                    <input class='ps-input' id='ps-up-mobile' placeholder='Enter Mobile Number' type='text'/>
+                    <div class='upload-drop-area' onclick='document.getElementById(&quot;ps-file-input&quot;).click()'>
+                        <i class='fa-solid fa-images' style='font-size:30px; color:#4b5563; margin-bottom:10px;'/>
+                        <div style='color:#94a3b8; font-size:12px; font-weight:bold;'>CLICK TO SELECT PHOTOS</div>
+                        <div style='color:#4b5563; font-size:10px;'>(Multiple Photos Supported)</div>
+                    </div>
+                    <input accept='image/*' id='ps-file-input' multiple='multiple' onchange='previewUploads(event)' style='display:none;' type='file'/>
+                    <div class='preview-grid' id='preview-grid'/>
+                    <button class='btn-action btn-upload' onclick='uploadPhotos()'><i class='fa-solid fa-upload'/> UPLOAD TO CLOUD</button>
+                </div>
+                <div class='ps-gallery-zone'>
+                    <div class='search-bar'>
+                        <input class='ps-input' id='ps-search-mobile' placeholder='Enter Customer Mobile to Search' style='margin:0; text-align:left; font-size:18px;' type='text'/>
+                        <button class='btn-action btn-search' onclick='loadGallery()'><i class='fa-solid fa-magnifying-glass'/></button>
+                    </div>
+                    <div class='main-viewer'>
+                        <img id='main-img' src='' style='display:none;'/>
+                        <div class='empty-state' id='main-placeholder'><i class='fa-regular fa-image' style='font-size:40px; margin-bottom:10px;'/><br/>NO PHOTO SELECTED</div>
+                    </div>
+                    <div class='gallery-controls'>
+                        <button class='ctrl-btn btn-dl' onclick='downloadCurrent()'><i class='fa-solid fa-download'/> DOWNLOAD</button>
+                        <button class='ctrl-btn btn-del' onclick='deleteCurrent()'><i class='fa-solid fa-trash'/> DELETE</button>
+                    </div>
+                    <div class='thumb-strip' id='thumb-strip'/>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type='text/javascript'>
+    //<![CDATA[
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQD2n6GA09JGfMuPcpMGVLbDtv_Jg8kaM",
+            authDomain: "ranaksyber.firebaseapp.com",
+            databaseURL: "https://ranaksyber-default-rtdb.firebaseio.com",
+            projectId: "ranaksyber",
+            storageBucket: "ranaksyber.firebasestorage.app",
+            messagingSenderId: "701008466110",
+            appId: "1:701008466110:web:38415743d609deb053ceef",
+            measurementId: "G-FBM4RL98YT"
+        };
+
+        let db = null;
+        let linksRef = null;
+
+        try {
+            if(firebaseConfig.apiKey) {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                linksRef = db.ref('links');
+            } else { console.warn("Firebase config missing!"); }
+        } catch(e) { console.error(e); }
+
+        const PRELOADED = [
+            {"name":"MY PAN AGENCY","url":"https://mypanagency.com/portallogin/login","cat":"Identity & Documents"},
+            {"name":"AADHAR DOWNLOAD","url":"https://myaadhaar.uidai.gov.in/","cat":"Identity & Documents"},
+            {"name":"VOTER CARD","url":"https://voters.eci.gov.in/","cat":"Identity & Documents"},
+            {"name":"RATION CARD","url":"https://wbpds.wb.gov.in/","cat":"Identity & Documents"},
+            {"name":"CAST CERTIFICATES","url":"https://castcertificatewb.gov.in/","cat":"Identity & Documents"},
+            {"name":"FREE PAN","url":"https://www.onlineservices.proteantech.in/","cat":"Identity & Documents"},
+            {"name":"PAN REPRINT","url":"https://www.pan.utiitsl.com/PAN/reprint.html","cat":"Identity & Documents"},
+            {"name":"LINK PAN-AADHAR","url":"https://eportal.incometax.gov.in/iec/foservices/#/pre-login/bl-link-aadhaar","cat":"Identity & Documents"},
+            {"name":"BIRTH CERTIFICATE","url":"https://janma-mrityutathya.wb.gov.in/verifycertificate","cat":"Identity & Documents"},
+            {"name":"DRIVING LICENSE","url":"https://sarathi.parivahan.gov.in/sarathiservice/dlreportaction.do","cat":"Identity & Documents"},
+            {"name":"PCC POLICE","url":"https://pcc.wb.gov.in/applicant-register-login","cat":"Identity & Documents"},
+            {"name":"RATION AADHAR LINK","url":"https://wbpds.wb.gov.in/","cat":"Identity & Documents"},
+            {"name":"RATION SELF SERVICE","url":"https://food.wb.gov.in/","cat":"Identity & Documents"},
+            {"name":"BANK AADHAR LINK","url":"https://www.npci.org.in/","cat":"Identity & Documents"},
+            {"name":"E-DISTRICT","url":"https://edistrict.wb.gov.in/","cat":"Govt Services & Land"},
+            {"name":"BANGLA BHUMI","url":"https://banglarbhumi.gov.in/","cat":"Govt Services & Land"},
+            {"name":"WB REGISTRATION","url":"https://wbregistration.gov.in/","cat":"Govt Services & Land"},
+            {"name":"E-SHRAM CARD","url":"https://eshram.gov.in/","cat":"Govt Services & Land"},
+            {"name":"LAKSHMIR BHANDAR","url":"https://socialsecurity.wb.gov.in/track-applicant","cat":"Govt Services & Land"},
+            {"name":"FARMER (EPADDY)","url":"https://epaddy.wb.gov.in/","cat":"Govt Services & Land"},
+            {"name":"RESIDENT CERT","url":"https://wbpms.in/citizen/","cat":"Govt Services & Land"},
+            {"name":"SWASTHYASATHI","url":"https://ssai.swasthyasathi.gov.in/","cat":"Govt Services & Land"},
+            {"name":"RTI CHALLAN","url":"https://echallan.parivahan.gov.in/index/accused-challan","cat":"Govt Services & Land"},
+            {"name":"EMPLOYMENT BANK","url":"https://employmentbankwb.gov.in/","cat":"Education & Jobs"},
+            {"name":"PSC OFFICIAL","url":"https://psc.wb.gov.in/","cat":"Education & Jobs"},
+            {"name":"AL AMEEN MISSION","url":"https://alameenmission.org/","cat":"Education & Jobs"},
+            {"name":"AL AMEEN ADMIT","url":"https://aamsystem.in/","cat":"Education & Jobs"},
+            {"name":"NIOS","url":"https://sdmis.nios.ac.in/","cat":"Education & Jobs"},
+            {"name":"CBSE DOCS","url":"https://cbseit.in/cbse/web/dads/List.aspx","cat":"Education & Jobs"},
+            {"name":"PHOTO ROOM","url":"https://app.photoroom.com/create","cat":"Tools & Utility"},
+            {"name":"PHOTO ENHANCER","url":"https://www.cutout.pro/","cat":"Tools & Utility"},
+            {"name":"WBSEDCL BILL","url":"https://portal.wbsedcl.in/","cat":"Tools & Utility"},
+            {"name":"CSC LOGIN","url":"https://connect.csc.gov.in/","cat":"Tools & Utility"},
+            {"name":"NDC FLIGHT","url":"https://ndc.deals/","cat":"Tools & Utility"},
+            {"name":"YOUTUBE","url":"https://WWW.YOUTUBE.COM","cat":"Tools & Utility"}
+        ];
+
+        let localData = [...PRELOADED];
+        let globalData = [];
+        let editingKey = null;
+
+        // --- NEW FIREBASE LOGIN LOGIC ---
+        function attemptLogin() {
+            let pass = document.getElementById('login-pass').value;
+            let stat = document.getElementById('login-status');
+            const adminEmail = "nirobdas03@gmail.com"; // Your Admin Email
+
+            if(pass) {
+                stat.innerText = 'AUTHENTICATING...';
+                stat.style.color = '#ff9933';
+                
+                // Using Firebase Auth instead of simple check
+                firebase.auth().signInWithEmailAndPassword(adminEmail, pass)
+                .then((userCredential) => {
+                    stat.innerText = 'ACCESS GRANTED';
+                    stat.style.color = '#10B981';
+                    
+                    setTimeout(() => {
+                        document.getElementById('login-screen').style.display = 'none';
+                        document.getElementById('welcome-flash').style.display = 'none';
+                        initCloudData();
+                        startHacking(); 
+                        updateDay();
+                        updateStats(); 
+                    }, 1000);
+                })
+                .catch((error) => {
+                    stat.innerText = 'ACCESS DENIED'; 
+                    stat.style.color = '#EF4444';
+                    console.error(error);
+                });
+            }
+        }
+        document.getElementById('login-pass').addEventListener('keypress', function (e) { if (e.key === 'Enter') attemptLogin(); });
+
+        function forgotPass() {
+            const adminEmail = "nirobdas03@gmail.com";
+            if(firebase.auth()) {
+                firebase.auth().sendPasswordResetEmail(adminEmail)
+                .then(() => { alert("Password reset link sent to: " + adminEmail + "\nCheck your inbox!"); })
+                .catch((error) => { alert("Error: " + error.message); });
+            }
+        }
+
+        // --- LOGOUT UPDATED ---
+        function logout() {
+            firebase.auth().signOut().then(() => {
+                document.getElementById('main-view').style.display = 'none';
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('login-pass').value = ''; 
+                document.getElementById('login-status').innerText = 'WAITING...';
+                document.getElementById('login-status').style.color = '#94a3b8';
+                closeSys(); 
+            });
+        }
+
+        // --- MASTER SETTINGS SYSTEM ---
+        let sysConfig = { bio: true, photo: true };
+
+        function openMasterSettings() {
+            closeSys();
+            document.getElementById('master-settings-view').style.display = 'flex';
+            
+            db.ref('system_settings').once('value').then(snap => {
+                let d = snap.val();
+                if(d) {
+                    sysConfig = d;
+                    document.getElementById('toggle-bio').checked = d.bio;
+                    document.getElementById('toggle-photo').checked = d.photo;
+                } else {
+                    document.getElementById('toggle-bio').checked = true;
+                    document.getElementById('toggle-photo').checked = true;
+                }
+            });
+        }
+
+        function closeMasterSettings() {
+            document.getElementById('master-settings-view').style.display = 'none';
+        }
+
+        function saveMasterSettings() {
+            let bioStatus = document.getElementById('toggle-bio').checked;
+            let photoStatus = document.getElementById('toggle-photo').checked;
+
+            db.ref('system_settings').set({
+                bio: bioStatus,
+                photo: photoStatus
+            }).then(() => {
+                sysConfig = { bio: bioStatus, photo: photoStatus };
+                showToast("Settings Updated Successfully!", "success");
+                closeMasterSettings();
+            }).catch(e => showToast("Error Saving Settings", "error"));
+        }
+
+        function loadSystemConfig() {
+            db.ref('system_settings').on('value', snap => {
+                let d = snap.val();
+                if(d) sysConfig = d;
+            });
+        }
+
+        // --- DYNAMIC EXTENSION SYSTEM ---
+        function saveCustomExtension() {
+            let title = document.getElementById('cust-title').value;
+            let code = document.getElementById('cust-code').value;
+
+            if(!title || !code) { showToast("Please enter Title and Code!", "error"); return; }
+
+            db.ref('custom_extension').set({ title: title, code: code, active: true }).then(() => {
+                showToast("New Section Added Successfully!", "success");
+                loadCustomExtensionBtn();
+                closeMasterSettings();
+            });
+        }
+
+        function loadCustomExtensionBtn() {
+            db.ref('custom_extension').once('value').then(snap => {
+                let d = snap.val();
+                let btn = document.getElementById('btn-custom-feature');
+                if(d && d.active) {
+                    btn.style.display = 'block';
+                    document.getElementById('menu-cust-title').innerText = d.title;
+                } else {
+                    btn.style.display = 'none';
+                }
+            });
+        }
+
+        function openCustomView() {
+            closeSys();
+            showToast("Loading Module...", "success");
+            
+            db.ref('custom_extension').once('value').then(snap => {
+                let d = snap.val();
+                if(d && d.code) {
+                    let container = document.getElementById('custom-content-area');
+                    document.getElementById('custom-view-title').innerText = d.title;
+                    document.getElementById('custom-view').style.display = 'flex';
+                    container.innerHTML = d.code;
+                    let scripts = container.getElementsByTagName("script");
+                    for(let i=0; i<scripts.length; i++) {
+                        let newScript = document.createElement("script");
+                        newScript.text = scripts[i].text;
+                        document.body.appendChild(newScript);
+                    }
+                }
+            });
+        }
+
+        function closeCustomView() {
+            document.getElementById('custom-view').style.display = 'none';
+        }
+
+        // --- DYNAMIC LOGIN SYSTEM (Visual Only) ---
+        function saveLoginDesign() {
+            let code = document.getElementById('custom-login-code').value;
+            // Removed ID check because logic is hardcoded now
+            db.ref('login_design').set(code).then(() => {
+                showToast("Login HTML Updated!", "success");
+                document.querySelector('.login-box').innerHTML = code;
+                closeMasterSettings();
+            });
+        }
+
+        function resetLoginDesign() {
+            if(confirm("Reset to default login design?")) {
+                db.ref('login_design').remove().then(() => {
+                    showToast("Reset Successful! Reloading...", "success");
+                    setTimeout(() => location.reload(), 1000);
+                });
+            }
+        }
+
+        function loadDynamicLogin() {
+            if(db) {
+                // AUTO FIX: Wipes problematic design on load to ensure functionality
+                // Remove the line below if you want to enable custom HTML for login again
+                db.ref('login_design').remove(); 
+                
+                db.ref('login_design').once('value').then(snap => {
+                    let design = snap.val();
+                    if(design && design.length > 20) {
+                        document.querySelector('.login-box').innerHTML = design;
+                    }
+                });
+            }
+        }
+
+        function initCloudData() {
+            loadSystemConfig(); 
+            loadCustomExtensionBtn();
+            if(!linksRef) { render(localData); return; }
+            linksRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) { globalData = Object.keys(data).map(key => ({ ...data[key], key: key })); } 
+                else { globalData = []; }
+                render([...localData, ...globalData]);
+            });
+        }
+        
+        function updateStats() {
+            db.ref('biodata').on('value', (snap) => {
+                const count = snap.numChildren();
+                animateValue("count-bio", 0, count, 1000);
+            });
+            db.ref('photovault').on('value', (snap) => {
+                let totalPhotos = 0;
+                snap.forEach((childSnap) => { totalPhotos += childSnap.numChildren(); });
+                animateValue("count-photo", 0, totalPhotos, 1000);
+            });
+        }
+        
+        function animateValue(id, start, end, duration) {
+            let obj = document.getElementById(id);
+            let range = end - start;
+            let minTimer = 50;
+            let stepTime = Math.abs(Math.floor(duration / range));
+            stepTime = Math.max(stepTime, minTimer);
+            let startTime = new Date().getTime();
+            let endTime = startTime + duration;
+            let timer;
+            function run() {
+                let now = new Date().getTime();
+                let remaining = Math.max((endTime - now) / duration, 0);
+                let value = Math.round(end - (remaining * range));
+                obj.innerHTML = value;
+                if (value == end) { clearInterval(timer); }
+            }
+            timer = setInterval(run, stepTime);
+            run();
+        }
+
+        function render(data) {
+            const grid = document.getElementById('grid');
+            const categories = {};
+            data.forEach((item, index) => {
+                let cat = item.cat || "Tools & Utility";
+                if(!categories[cat]) categories[cat] = [];
+                categories[cat].push({...item, idx: index}); 
+            });
+            let html = '';
+            for (let cat in categories) {
+                html += `<div class="cat-section"><div class="cat-header"><i class="fa-solid fa-layer-group"></i> ${cat}</div><div class="grid">${categories[cat].map(item => `<div class="card item"><div class="card-inner-content"><div class="card-head"><div class="card-icon"><i class="fa-solid fa-link"></i></div><h3 style="margin:0; font-size:12px; line-height:1.2; height:32px; overflow:hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${item.name}</h3></div><div class="actions"><button class="btn-act btn-edit" onclick="editAnyLink('${item.key || 'local_' + item.idx}', '${item.name}', '${item.url}', '${item.cat}')"><i class="fa-solid fa-pen"></i></button><a href="${item.url}" target="_blank" class="btn-act btn-open">OPEN</a></div></div></div>`).join('')}</div></div>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        function saveLinkToCloud() {
+            if(!linksRef) { showToast("Firebase Error", "error"); return; }
+            let c = document.getElementById('b-cat').value, n = document.getElementById('b-name').value, u = document.getElementById('b-url').value;
+            if(!n || !u) { showToast("Enter Name/URL", "error"); return; }
+            
+            if(editingKey) {
+                linksRef.child(editingKey).update({ name: n, url: u, cat: c }).then(() => { resetForm(); showToast("Updated!", "success"); });
+            } else {
+                linksRef.push({ name: n, url: u, cat: c }).then(() => { resetForm(); showToast("Saved!", "success"); });
+            }
+        }
+
+        function editAnyLink(k, n, u, c) {
+            document.getElementById('b-cat').value = c; document.getElementById('b-name').value = n; document.getElementById('b-url').value = u;
+            editingKey = k.startsWith('local_') ? null : k;
+            document.getElementById('add-btn').innerText = editingKey ? "UPDATE" : "SAVE NEW";
+            document.querySelector('.sidebar-left').scrollTop = 0;
+        }
+        function resetForm() { document.getElementById('b-name').value = ""; document.getElementById('b-url').value = ""; editingKey = null; document.getElementById('add-btn').innerText = "SAVE TO CLOUD"; }
+        function toggleEditMode() { document.body.classList.toggle('edit-mode-active'); closeSys(); }
+        function showToast(msg, type) { const c = document.getElementById('toast-container'); const b = document.createElement('div'); b.className = `toast-box ${type}`; b.innerHTML = `<i class="fa-solid ${type==='success'?'fa-check':'fa-exclamation'}"></i> ${msg}`; c.appendChild(b); setTimeout(() => b.remove(), 3000); }
+        function openSys() { document.getElementById('sys-menu').style.display = 'flex'; }
+        function closeSys() { document.getElementById('sys-menu').style.display = 'none'; }
+        function filter() { let v = document.getElementById('search').value.toLowerCase(); let cards = document.getElementsByClassName('item'); for(let c of cards) { c.style.display = c.innerText.toLowerCase().includes(v) ? "" : "none"; } }
+        function initBars() { document.getElementById('net-bars').innerHTML = Array(20).fill('<div class="bar"></div>').join(''); }
+        function updateDay() { document.getElementById('bengali-day').innerText = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'][new Date().getDay()]; }
+        setInterval(() => { const n = new Date(); document.getElementById('clock-display').innerText = n.toLocaleTimeString(); document.getElementById('date-display').innerText = n.toLocaleDateString(); updateDay(); }, 1000);
+        function startHacking() { setInterval(() => { const c = document.getElementById('hack-console'); if(c) { let d = document.createElement('div'); d.className = 'log-line'; d.innerText = '> System Active...'; c.appendChild(d); c.scrollTop = c.scrollHeight; } }, 2000); }
+        
+        window.sendWA = function() {
+            let phone = document.getElementById('wa-phone').value.trim();
+            let msg = document.getElementById('wa-msg').value.trim();
+            if(!phone) { alert("Please enter mobile number"); return; }
+            if(phone.length === 10) phone = "91" + phone;
+            window.open("https://wa.me/" + phone + "?text=" + encodeURIComponent(msg), '_blank');
+        };
+        
+        window.toggleFull = function() {
+            var elem = document.documentElement;
+            if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                if (elem.requestFullscreen) { elem.requestFullscreen(); }
+                else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
+                else if (elem.mozRequestFullScreen) { elem.mozRequestFullScreen(); }
+                else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT); }
+            } else {
+                if (document.exitFullscreen) { document.exitFullscreen(); }
+                else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+                else if (document.mozCancelFullScreen) { document.mozCancelFullScreen(); }
+                else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+            }
+        };
+
+        // --- UPDATED OPEN FUNCTIONS WITH LOCK ---
+        function openBioData() { 
+            if(!sysConfig.bio) { showToast("ACCESS DENIED: Bio Data Locked by Admin.", "error"); return; }
+            document.getElementById('main-view').style.display='none'; 
+            document.getElementById('bio-view').classList.add('active'); 
+            closeSys(); 
+        }
+        function closeBioData() { document.getElementById('bio-view').classList.remove('active'); document.getElementById('main-view').style.display='flex'; }
+
+        function resetBioForm() {
+             document.querySelectorAll('.bio-inp').forEach(el => {
+                if(el.type === 'checkbox') el.checked = false;
+                else el.value = '';
+             });
+             document.getElementById('nation').value = 'Indian';
+             document.getElementById('state').value = 'West Bengal';
+             document.getElementById('ai_qual').value = '10th';
+             document.getElementById('ai_exp').value = 'Fresh';
+             document.getElementById('gender').value = 'Male';
+             document.getElementById('cv-photo').src = '';
+             document.getElementById('cv-photo').style.display = 'none';
+             document.getElementById('dob_d').value = '';
+             document.getElementById('dob_m').value = '';
+             document.getElementById('dob_y').value = '';
+             upd(); 
+             showToast("Form Reset for New Customer!", "success");
+        }
+
+        function loadPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const MAX_WIDTH = 300;
+                        const MAX_HEIGHT = 400;
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+                        else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+                        canvas.width = width; canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                        document.getElementById('cv-photo').src = dataUrl;
+                        document.getElementById('cv-photo').style.display = 'block';
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function saveBioData() {
+            let m = document.getElementById('cust-mobile').value;
+            if(!m) { showToast("Enter Customer Mobile Number", "error"); return; }
+            showToast("Saving to Cloud...", "success");
+            let data = {};
+            document.querySelectorAll('.bio-inp, .lang-chk, .lang-sel').forEach(el => {
+                if(el.id) { data[el.id] = el.type === 'checkbox' ? el.checked : el.value; }
+            });
+            data['dob'] = document.getElementById('dob_d').value + "/" + document.getElementById('dob_m').value + "/" + document.getElementById('dob_y').value;
+            
+            let photoSrc = document.getElementById('cv-photo').src;
+            if(photoSrc && photoSrc.startsWith('data:image')) { data['photoData'] = photoSrc; }
+            db.ref('biodata/' + m).set(data)
+            .then(() => { 
+                showToast("Bio-Data Saved Successfully!", "success");
+            })
+            .catch((error) => { showToast("Error: " + error.message, "error"); });
+        }
+        
+        function loadBioData() {
+            let m = document.getElementById('cust-mobile').value;
+            if(!m) { showToast("Enter Mobile Number to Load", "error"); return; }
+            showToast("Searching Online Database...", "success");
+            db.ref('biodata/' + m).once('value')
+            .then((snapshot) => {
+                let data = snapshot.val();
+                if(data) {
+                    for(let k in data) { 
+                        let el = document.getElementById(k);
+                        if(el) {
+                            if(el.type === 'checkbox') el.checked = data[k];
+                            else el.value = data[k];
+                        }
+                    }
+                    if(data['dob']) {
+                        let parts = data['dob'].split('/');
+                        if(parts.length === 3) {
+                            document.getElementById('dob_d').value = parts[0];
+                            document.getElementById('dob_m').value = parts[1];
+                            document.getElementById('dob_y').value = parts[2];
+                            handleDob();
+                        }
+                    }
+                    if(data['photoData']) {
+                        let photoEl = document.getElementById('cv-photo');
+                        photoEl.src = data['photoData'];
+                        photoEl.style.display = 'block';
+                    } else {
+                        document.getElementById('cv-photo').style.display = 'none';
+                    }
+                    upd(); 
+                    showToast("Data Loaded from Cloud!", "success");
+                } else { showToast("No data found.", "error"); }
+            })
+            .catch((error) => { showToast("Network Error!", "error"); });
+        }
+
+        function smartPrint() {
+            let page = document.getElementById('cv-page-content');
+            page.style.fontSize = ''; 
+            const MAX_HEIGHT = 1115; 
+            let fontSizePercent = 100;
+            while (page.scrollHeight > page.clientHeight && fontSizePercent > 60) {
+                fontSizePercent -= 1;
+                page.style.fontSize = (fontSizePercent / 100) + 'em';
+            }
+            window.print();
+        }
+
+        function handlePin(p) {
+            if(p.length===6){
+                fetch('https://api.postalpincode.in/pincode/'+p).then(r=>r.json()).then(d=>{
+                    if(d[0].Status==='Success'){
+                        let i = d[0].PostOffice[0];
+                        document.getElementById('dist').value=i.District; document.getElementById('state').value=i.State;
+                        let s=document.getElementById('po'); s.innerHTML='<option value="">Select PO</option>'; 
+                        d[0].PostOffice.forEach(o=>{let x=document.createElement('option');x.text=o.Name;s.add(x)});
+                        let psInput = document.getElementById('ps');
+                        let psList = document.getElementById('ps_list');
+                        psList.innerHTML = '';
+                        let uniqueBlocks = [...new Set(d[0].PostOffice.map(item => item.Block))];
+                        uniqueBlocks.forEach(block => {
+                            if(block !== "NA") { let opt = document.createElement('option'); opt.value = block; psList.appendChild(opt); }
+                        });
+                        if(uniqueBlocks.length === 1 && uniqueBlocks[0] !== "NA") { psInput.value = uniqueBlocks[0]; } else { psInput.value = ""; }
+                        sync();
+                    }
+                });
+            }
+            upd();
+        }
+        
+        function sync() { 
+            if(document.getElementById('same').checked) { 
+                let map = { 'pres_rel_type': 'perm_rel_type', 'pres_rel_name': 'perm_rel_name', 'vill': 'p_vill', 'po': 'p_po', 'ps': 'p_ps', 'dist': 'p_dist', 'state': 'p_state', 'pin': 'p_pin' };
+                for(let src in map) { document.getElementById(map[src]).value = document.getElementById(src).value; }
+            } 
+            upd(); 
+        }
+        
+        function genObj() { document.getElementById('cv-obj').innerText = document.getElementById('ai_exp').value==='Exp' ? "Experienced professional seeking a challenging position to leverage my skills." : "I aspire to work in a challenging and dynamic organization where I can utilize my skills."; }
+        
+        function adjustFontSize(element) {
+            let defaultSize = 13; 
+            element.style.fontSize = defaultSize + "px"; 
+            let parentWidth = element.parentElement.clientWidth;
+            while (element.scrollWidth > parentWidth && defaultSize > 8) {
+                defaultSize -= 0.5;
+                element.style.fontSize = defaultSize + "px";
+            }
+        }
+        
+        function handleDob(el) {
+            let d = document.getElementById('dob_d').value;
+            let m = document.getElementById('dob_m').value;
+            let y = document.getElementById('dob_y').value;
+            
+            if(d && m && y) {
+                let fullDate = d + "/" + m + "/" + y;
+                document.getElementById('cv-dob').innerText = fullDate;
+                document.getElementById('r-dob').classList.remove('hidden');
+            } else {
+                document.getElementById('r-dob').classList.add('hidden');
+            }
+            
+            if(el && el.value.length === el.maxLength) {
+                let next = el.nextElementSibling?.nextElementSibling; 
+                if(next && next.tagName === 'INPUT') next.focus();
+            }
+        }
+
+        function setText(inputId, outputId, rowId) { 
+            let v = document.getElementById(inputId).value; 
+            let el = document.getElementById(outputId);
+            if(el) el.innerText = v;
+            if(rowId) {
+                let row = document.getElementById(rowId);
+                if(row) { if(v && v.trim() !== "") row.classList.remove('hidden'); else row.classList.add('hidden'); }
+            }
+        }
+        
+        function upd() {
+            setText('name','cv-name'); setText('mobile','cv-mob', 'r-mob'); setText('email','cv-em', 'r-em'); 
+            setText('father','cv-fath', 'r-fath');
+            
+            setText('gender','cv-gen'); setText('marital','cv-mar'); setText('nation','cv-nat'); setText('religion','cv-rel');
+            let pr = document.getElementById('pres_rel_name').value;
+            if(pr) {
+                document.getElementById('r-pr-rel').classList.remove('hidden');
+                document.getElementById('cv-pr-typ').innerText = document.getElementById('pres_rel_type').value;
+                document.getElementById('cv-pr-nm').innerText = pr;
+            } else { document.getElementById('r-pr-rel').classList.add('hidden'); }
+            setText('vill','cv-vill', 'r-vill'); setText('po','cv-po', 'r-po'); 
+            setText('ps','cv-ps', 'r-ps'); setText('dist','cv-dist', 'r-dist'); 
+            let pin = document.getElementById('pin').value;
+            if(pin) {
+                document.getElementById('r-pin').classList.remove('hidden');
+                document.getElementById('cv-pin').innerText = pin;
+            } else { document.getElementById('r-pin').classList.add('hidden'); }
+            
+            let stateVal = document.getElementById('state').value;
+            if(stateVal) {
+                document.getElementById('r-state').classList.remove('hidden');
+                document.getElementById('cv-state').innerText = stateVal;
+            } else { document.getElementById('r-state').classList.add('hidden'); }
+
+            let pm = document.getElementById('perm_rel_name').value;
+            if(pm) {
+                document.getElementById('r-pm-rel').classList.remove('hidden');
+                document.getElementById('cv-pm-typ').innerText = document.getElementById('perm_rel_type').value;
+                document.getElementById('cv-pm-nm').innerText = pm;
+            } else { document.getElementById('r-pm-rel').classList.add('hidden'); }
+            setText('p_vill','cv-p-vill', 'r-p-vill'); setText('p_po','cv-p-po', 'r-p-po'); 
+            setText('p_ps','cv-p-ps', 'r-p-ps'); setText('p_dist','cv-p-dist', 'r-p-dist'); 
+            let p_pin = document.getElementById('p_pin').value;
+            if(p_pin) {
+                document.getElementById('r-p-pin').classList.remove('hidden');
+                document.getElementById('cv-p-pin').innerText = p_pin;
+            } else { document.getElementById('r-p-pin').classList.add('hidden'); }
+            
+            let p_stateVal = document.getElementById('p_state').value;
+            if(p_stateVal) {
+                document.getElementById('r-p-state').classList.remove('hidden');
+                document.getElementById('cv-p-state').innerText = p_stateVal;
+            } else { document.getElementById('r-p-state').classList.add('hidden'); }
+
+            setText('aadhar', 'cv-aad', 'r-aad');
+            let mb = document.getElementById('mp_board').value;
+            if(mb) {
+                document.getElementById('r-mp').classList.remove('hidden');
+                document.getElementById('c-m-b').innerText = mb;
+                document.getElementById('c-m-d').innerText = document.getElementById('mp_disc').value;
+                document.getElementById('c-m-y').innerText = document.getElementById('mp_year').value;
+                document.getElementById('c-m-m').innerText = document.getElementById('mp_marks').value;
+            } else { document.getElementById('r-mp').classList.add('hidden'); }
+            let hb = document.getElementById('hs_board').value;
+            if(hb) {
+                document.getElementById('r-hs').classList.remove('hidden');
+                document.getElementById('c-h-b').innerText = hb;
+                document.getElementById('c-h-d').innerText = document.getElementById('hs_disc').value;
+                document.getElementById('c-h-y').innerText = document.getElementById('hs_year').value;
+                document.getElementById('c-h-m').innerText = document.getElementById('hs_marks').value;
+            } else { document.getElementById('r-hs').classList.add('hidden'); }
+            let gn = document.getElementById('gr_name').value;
+            if(gn) {
+                document.getElementById('r-gr').classList.remove('hidden');
+                document.getElementById('c-g-n').innerText = gn;
+                document.getElementById('c-g-b').innerText = document.getElementById('gr_board').value;
+                document.getElementById('c-g-d').innerText = document.getElementById('gr_disc').value;
+                document.getElementById('c-g-y').innerText = document.getElementById('gr_year').value;
+                document.getElementById('c-g-m').innerText = document.getElementById('gr_marks').value;
+            } else { document.getElementById('r-gr').classList.add('hidden'); }
+            
+            let techC1 = document.getElementById('tech_course_1').value;
+            let techI1 = document.getElementById('tech_inst_1').value;
+            let techM1 = document.getElementById('tech_marks_1').value;
+            if (techC1) {
+                document.getElementById('r-tech').classList.remove('hidden');
+                document.getElementById('r-tech-1').classList.remove('hidden');
+                document.getElementById('cv-tech-c1').innerText = techC1;
+                document.getElementById('cv-tech-i1').innerText = techI1;
+                document.getElementById('cv-tech-m1').innerText = techM1 ? "(" + techM1 + ")" : "";
+            } else { document.getElementById('r-tech-1').classList.add('hidden'); }
+
+            let techC2 = document.getElementById('tech_course_2').value;
+            let techI2 = document.getElementById('tech_inst_2').value;
+            let techM2 = document.getElementById('tech_marks_2').value;
+            if (techC2) {
+                document.getElementById('r-tech-2').classList.remove('hidden');
+                document.getElementById('cv-tech-c2').innerText = techC2;
+                document.getElementById('cv-tech-i2').innerText = techI2;
+                document.getElementById('cv-tech-m2').innerText = techM2 ? "(" + techM2 + ")" : "";
+            } else { document.getElementById('r-tech-2').classList.add('hidden'); }
+
+            let langs = [];
+            if(document.getElementById('chk_ben').checked) langs.push("Bengali (" + document.getElementById('lvl_ben').value + ")");
+            if(document.getElementById('chk_eng').checked) langs.push("English (" + document.getElementById('lvl_eng').value + ")");
+            if(document.getElementById('chk_hin').checked) langs.push("Hindi (" + document.getElementById('lvl_hin').value + ")");
+            if(langs.length > 0) {
+                document.getElementById('cv-lng').innerText = langs.join(", ");
+                document.getElementById('r-lng').classList.remove('hidden');
+            } else { document.getElementById('r-lng').classList.add('hidden'); }
+            setText('dist','cv-pl');
+            document.getElementById("qrcode").innerHTML = "";
+            let n = document.getElementById('name').value;
+            if(n) new QRCode(document.getElementById("qrcode"), { text: n + " - " + document.getElementById('mobile').value, width: 80, height: 80 });
+        }
+        genObj();
+        
+        function openPhotoStudio() { 
+            if(!sysConfig.photo) { showToast("ACCESS DENIED: Photo Studio Locked by Admin.", "error"); return; }
+            document.getElementById('main-view').style.display='none'; 
+            document.getElementById('photo-view').classList.add('active'); 
+            closeSys(); 
+        }
+        function closePhotoStudio() { document.getElementById('photo-view').classList.remove('active'); document.getElementById('main-view').style.display='flex'; }
+        
+        let imagesToUpload = [];
+
+        function previewUploads(event) {
+            const files = event.target.files;
+            const grid = document.getElementById('preview-grid');
+            grid.innerHTML = '';
+            imagesToUpload = [];
+
+            if (files.length > 0) {
+                document.querySelector('.upload-drop-area').style.display = 'none';
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            const MAX_WIDTH = 800; const MAX_HEIGHT = 1000;
+                            let width = img.width; let height = img.height;
+                            if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+                            else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+                            canvas.width = width; canvas.height = height;
+                            ctx.drawImage(img, 0, 0, width, height);
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                            imagesToUpload.push(dataUrl);
+                            const thumb = document.createElement('img');
+                            thumb.src = dataUrl;
+                            thumb.className = 'mini-preview';
+                            grid.appendChild(thumb);
+                        }
+                        img.src = e.target.result;
+                    }
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+        
+        function uploadPhotos() {
+            let m = document.getElementById('ps-up-mobile').value;
+            if(!m) { showToast("Enter Customer Number in Upload Zone", "error"); return; }
+            if(imagesToUpload.length === 0) { showToast("Select photos first", "error"); return; }
+            showToast("Uploading " + imagesToUpload.length + " photos...", "success");
+            let completed = 0;
+            imagesToUpload.forEach(imgData => {
+                db.ref('photovault/' + m).push({ photo: imgData, date: new Date().toLocaleDateString() })
+                .then(() => {
+                    completed++;
+                    if(completed === imagesToUpload.length) {
+                        showToast("All Photos Uploaded!", "success");
+                        setTimeout(() => {
+                            document.getElementById('ps-up-mobile').value = '';
+                            document.getElementById('ps-file-input').value = '';
+                            document.getElementById('preview-grid').innerHTML = '';
+                            document.querySelector('.upload-drop-area').style.display = 'block';
+                            imagesToUpload = [];
+                        }, 1500);
+                    }
+                });
+            });
+        }
+        
+        let currentViewKey = null;
+
+        function loadGallery() {
+            let m = document.getElementById('ps-search-mobile').value;
+            if(!m) { showToast("Enter Mobile Number", "error"); return; }
+            showToast("Searching...", "success");
+            db.ref('photovault/' + m).once('value').then((snap) => {
+                const strip = document.getElementById('thumb-strip');
+                strip.innerHTML = '';
+                if(snap.exists()) {
+                    const data = snap.val();
+                    let images = [];
+                    if(data.photo && typeof data.photo === 'string') { images.push({ key: 'legacy', ...data }); } 
+                    else { Object.keys(data).forEach(key => { images.push({ key: key, ...data[key] }); }); }
+                    
+                    if(images.length > 0) {
+                        let lastImg = images[images.length - 1];
+                        setMainImage(lastImg.photo, lastImg.key);
+                        for(let i = images.length - 1; i >= 0; i--) {
+                            let item = images[i];
+                            const thumb = document.createElement('img');
+                            thumb.className = 'thumb-item';
+                            thumb.src = item.photo;
+                            thumb.onclick = function() {
+                                setMainImage(item.photo, item.key);
+                                document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+                                this.classList.add('active');
+                            };
+                            strip.appendChild(thumb);
+                        }
+                        showToast("Found " + images.length + " Photos", "success");
+                    }
+                } else {
+                    resetGallery();
+                    showToast("No Photos Found", "error");
+                }
+            });
+        }
+        
+        function setMainImage(src, key) {
+            document.getElementById('main-img').src = src;
+            document.getElementById('main-img').style.display = 'block';
+            document.getElementById('main-placeholder').style.display = 'none';
+            currentViewKey = key;
+        }
+        
+        function resetGallery() {
+            document.getElementById('main-img').style.display = 'none';
+            document.getElementById('main-placeholder').style.display = 'block';
+            document.getElementById('thumb-strip').innerHTML = '';
+            currentViewKey = null;
+        }
+        
+        function downloadCurrent() {
+            let src = document.getElementById('main-img').src;
+            if(!src || !src.startsWith('data:image')) { showToast("No photo to download", "error"); return; }
+            let a = document.createElement('a');
+            a.href = src;
+            a.download = 'studio_' + Date.now() + '.jpg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        
+        function deleteCurrent() {
+            let m = document.getElementById('ps-search-mobile').value;
+            if(!m || !currentViewKey) { showToast("Select a photo first", "error"); return; }
+            let pass = prompt("Enter Password to Delete:");
+            if(pass === "1234") {
+                if(currentViewKey === 'legacy') {
+                    db.ref('photovault/' + m).remove().then(() => { showToast("Deleted!", "success"); loadGallery(); });
+                } else {
+                    db.ref('photovault/' + m + '/' + currentViewKey).remove().then(() => { showToast("Deleted!", "success"); loadGallery(); });
+                }
+            } else { alert("Incorrect Password"); }
+        }
+
+        // LOAD LOGIN DESIGN ON STARTUP
+        loadDynamicLogin();
+
+        // --- SECURITY SYSTEM (ANTI-HACK) ---
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; // F12
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; // Ctrl+Shift+I
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; // Ctrl+Shift+C
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; // Ctrl+Shift+J
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; // Ctrl+U
+        }
+
+    //]]>
+    </script>
+</body>
+</html>
